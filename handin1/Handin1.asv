@@ -71,7 +71,7 @@ function z = iterativePageRank(W, beta, mu)
     z = z_new;
 end
 
-function [x, cont] = consensus(W, i1, i2, cont_i)
+function x = consensus(W, i1, i2)
     [w_out, ~] = degree(W);
     dangling = (w_out == 0);
 
@@ -83,21 +83,12 @@ function [x, cont] = consensus(W, i1, i2, cont_i)
     % fix dangling row properly (PageRank teleportation idea)
     P(dangling,:) = 1/length(w_out);
 
-    x = ones(length(w_out), 1) * 0.5;
-    x(i1) = 1;
-    x(i2) = 0;
+    x = 
 
-    cont = zeros(1,10000);
-
-    for k = 1:10000
+    for k = 1:1000
         x_new = P * x;
-        x_new(i1) = 1;
-        x_new(i2) = 0;
-
-        cont(k) = x_new(cont_i);
         
         if norm(x_new - x) < 1e-8
-            cont = cont(1:k);
             break;
         end
         
@@ -108,7 +99,6 @@ function [x, cont] = consensus(W, i1, i2, cont_i)
 end
 
 %%
-
 
 
 %% Centrality
@@ -209,13 +199,7 @@ disp("top iterative page rank")
 disp(top_pageRank(:,1)');
 disp(top_pageRank(:,2)');
 
-%% b)
+%% a)
 
-[x, cont] = consensus(W, 12, 1, 4000);
-t = 1:length(cont);
-figure
-plot(t, cont)
-
-%% c)
 
 
