@@ -28,7 +28,7 @@ end
 
 function z = eigenvectorCentrality(W)
 
-    [eigenvectors, eigenvalues] = eig(W);
+    [eigenvectors, eigenvalues] = eig(W');
     [~, idx] = max(abs(diag(eigenvalues)));
 
     z = eigenvectors(:, idx);
@@ -44,16 +44,10 @@ end
 
 function z = iterativePageRank(W, beta, mu)
     [w_out, ~] = degree(W);
-    dangling = (w_out == 0);
-
-    w_out(dangling) = 1;
+    w_out(w_out == 0) = 1;
     
     D = sparse(diag(w_out));
     P = D \ W;
-    
-    % fix dangling row properly (PageRank teleportation idea)
-    P(dangling,:) = 1/length(w_out);
-
 
     mu = mu / sum(mu);
     z = mu; %initial value
@@ -73,16 +67,11 @@ end
 
 function [x, cont] = consensus(W, i1, i2, cont_i)
     [w_out, ~] = degree(W);
-    dangling = (w_out == 0);
-
-    w_out(dangling) = 1;
+    w_out(w_out == 0) = 1;
     
     D = sparse(diag(w_out));
     P = D \ W;
     
-    % fix dangling row properly (PageRank teleportation idea)
-    P(dangling,:) = 1/length(w_out);
-
     x = ones(length(w_out), 1) * 0.5;
     x(i1) = 1;
     x(i2) = 0;
