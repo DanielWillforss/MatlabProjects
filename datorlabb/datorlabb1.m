@@ -1,10 +1,13 @@
+clear
+clc
+
 %% Pre-processor
 
 A = 10;
 k = 5;
 L = 6;
 Q = 100;
-nen = 1;
+nen = 2;
 nelm = 100; %edit this
 
 Le = 6/nelm;
@@ -44,9 +47,9 @@ a = solve(K, F, bc);
 %% Post-processor
 
 
-xplot = 1:ndof;
-plot(xplot, a);
-%ed = extract(Edof, a);
-%es = spring1s(k*A/Le, ed);
-%eldraw
-%eldisp
+plot(Coord, a, '-', 'LineWidth', 1.5, 'MarkerSize', 6);
+grid on;
+
+xlabel('Position');
+ylabel('Temperature');
+title('Temperature Distribution in 1D Object');

@@ -29,9 +29,14 @@ end
 function z = eigenvectorCentrality(W)
 
     [eigenvectors, eigenvalues] = eig(W');
-    [~, idx] = max(abs(diag(eigenvalues)));
+    [~, idx] = max(real(diag(eigenvalues)));
 
     z = eigenvectors(:, idx);
+
+    if sum(z) < 0
+        z = -z;
+    end
+
     z = z / norm(z);
 end
 
@@ -117,8 +122,8 @@ idn2000 = io.idn2000;
 
 %% a) in/out
 
-[swe_in, swe_out] = degree(swe2000);
-[idn_in, idn_out] = degree(idn2000);
+[swe_out, swe_in] = degree(swe2000);
+[idn_out, idn_in] = degree(idn2000);
 
 disp("Swe in")
 top_swe_in = findLargest(swe_in, 3);
@@ -200,11 +205,27 @@ disp(top_pageRank(:,2)');
 
 %% b)
 
-[x, cont] = consensus(W, 12, 1, 4000);
+i = [9, 1, 112];
+
+[opinion, cont] = consensus(W, i(1), i(2), i(3));
 t = 1:length(cont);
 figure
 plot(t, cont)
+xlabel('Time step')
+ylabel(['State of node ', num2str(i(3))])
+
+title(sprintf('Consensus dynamics: node %d over time\nStubborn nodes: %d and %d', ...
+    i(3), i(1), i(2)))
 
 %% c)
 
+i = [2, 26, 112];
+
+[opinion, ~] = consensus(W, i(1), i(2), i(3));
+t = 1:length(cont);
+figure
+histogram(opinion)
+
+title(sprintf('Stubborn nodes: %d and %d', ...
+    i(1), i(2)))
 
