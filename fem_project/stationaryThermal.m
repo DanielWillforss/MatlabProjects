@@ -2,7 +2,7 @@ clear
 close all
 clc
 
-%% Pre-processor (old)
+%% Pre-processor
 
 % Get mesh
 load("mesh.mat");
@@ -33,32 +33,45 @@ nen = 3;
 % Set material constants
 
 k = 1;
+D = [k 0; 0 k];
+qout = 2000;
+alphac = 50;
+Tinf = 293;
+ep = 1;
+Q = 4*10^5;
 
 % Set up K, f, and bc
-topBoundary = e(1:2, (e(5,:) == 1));
-topNodes = unique(topBoundary);
-bottomBoundary = e(1:2, (e(5,:) == 3));
-bottomNodes = unique(bottomBoundary);
-circleBoundary = e(1:2, ismember(e(5,:), 5:20));
-circleNodes = unique(circleBoundary);
-
-bc = [topNodes, 1000*ones(length(topNodes), 1); 
-    bottomNodes, zeros(length(bottomNodes), 1);
-    circleNodes, 500*ones(length(circleNodes), 1)];
-
 K = zeros(ndof);
-F = zeros(ndof, 1);
+f = zeros(ndof, 1);
 
-%% Solver (old)
+for enr = 1:length(e)
+    boundary = e(5, enr);
+    node1 = e(1, enr);
+    node2 = e(2, enr);
+    Le = norm(coord(node1, :) - coord(node2, :));
+    Ke = zeros(2, 2);
+    fe = zeros(2, 1);
 
-for elnr = 1:nelm
-    Ke = flw2te(ex(elnr,:), ey(elnr,:), 1, [k 0; 0 k]);
-    K = assem(edof(elnr,:), K, Ke);
+    if boundary == 3
+        fe = -qout*Le/2 * ones(2, 1);
+    end
+    if ismember(boundary, [1 5:20])
+        Ke = alphac*Le/6*[2 1; 1 2];
+        fe = alphac*Tinf*Le/2*ones(2,1);
+    end
+    [K, f] = assem([0 node1 node2], K, Ke, f, fe);
 end
 
-a = solve(K, F, bc);
+%% Solver
 
-%% Post-processor (old)
+for elnr = 1:nelm
+    [Ke, fe] = flw2te(ex(elnr,:), ey(elnr,:), ep, [k 0; 0 k], Q);
+    [K, f] = assem(edof(elnr,:), K, Ke, f, fe);
+end
+
+a = solve(K, f);
+
+%% Post-processor
 
 ed = extract(edof, a);
 
