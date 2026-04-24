@@ -52,36 +52,46 @@ nu(17) = b(1);
 cvx_quiet true
 
 cvx_begin
-    variable f(M)
-    minimize sum(l.*C.*inv_pos(1-f./C) - l.*C)
+    variable f1(M)
+    minimize sum(l.*C.*inv_pos(1-f1./C) - l.*C)
     subject to
-        B * f == nu
-        0 <= f <= C
+        B * f1 == nu
+        0 <= f1 <= C
 cvx_end
 
-disp(f);
+%% e)
+
+cvx_begin
+    variable f2(M)
+    minimize( sum( -l .* C .* log(1 - f2./C) ) )
+    subject to
+        B * f2 == nu
+        0 <= f2 <= C
+cvx_end
+
+%% f)
+
+w = f1.*l./(C.*(1-f1./C).^2);
+
+cvx_begin
+    variable f3(M)
+    minimize( sum( -l .* C .* log(1 - f3./C) + f3.*w) )
+    subject to
+        B * f3 == nu
+        0 <= f3 <= C
+cvx_end
+
+disp(f3);
 
 %%
 
-M = 28;
-nu = zeros(17, 1);
-nu(1) = -b(1);
-nu(17) = b(1);
-
-cvx_quiet true
-
-cvx_quiet true
-
 cvx_begin
-    variable f(M)
-    minimize( sum( -l .* C .* log(1 - f./C) ) )
+    variable f4(M)
+    minimize sum(l.*C.*inv_pos(1-f4./C) - l.*C)
     subject to
-        B * f == nu
-        0 <= f <= C
+        B * f4 == nu
+        0 <= f4 <= C
 cvx_end
-
-disp(f);
-
 
 %% Plot capacity
 
@@ -160,16 +170,16 @@ for i = 1:size(coord,1)
         'FontSize', 12);
 end
 
-f = f(:); % ensure column vector
+f1 = f1(:); % ensure column vector
 
-fmin = min(f);
-fmax = max(f);
+fmin = min(f1);
+fmax = max(f1);
 
-f_norm = (f - fmin) / (fmax - fmin + eps); % scale to [0,1]
+f1_norm = (f1 - fmin) / (f1max - f1min + eps); % scale to [0,1]
 
 cmap = turbo(256);   % or jet(256), turbo(256), parula(256) etc.
 
-colors = cmap(round(f_norm * 255) + 1, :);
+colors = cmap(round(f1_norm * 255) + 1, :);
 
 for e = 1:size(edges,1)
     i = edges(e,1); % from node
@@ -188,7 +198,7 @@ scatter(coord(edges(:,1),1), coord(edges(:,1),2), ...
     1, f, 'filled', 'MarkerFaceAlpha', 0); % invisible but carries data
 
 colormap(turbo);      % or parula, cividis, etc.
-clim([min(f) max(f)]);
+clim([min(f1) max(f1)]);
 colorbar;
 
 % Optional: nicer limits
