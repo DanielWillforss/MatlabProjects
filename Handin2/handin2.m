@@ -12,44 +12,36 @@ d = @(f) (l./(1-f./C)).*(f < C) + realmax.*(f > C);
 
 [from_nodes, edge_idx_from] = find(B == 1);
 [to_nodes,   edge_idx_to]   = find(B == -1);
-
 edges = zeros(size(B,2), 2);
 edges(edge_idx_from, 1) = from_nodes;
 edges(edge_idx_to,   2) = to_nodes;
 
+% For plotting
 coord = [0 3; 1 3; 2 3; 3 3; 4 3; 0 2; 1 2; 2 2; 3 2; 1 1; 2 1; 3 1; 4 1; 5 1; 2 0; 3 0; 5 0];
 
 %% a) shortest path
 
-G = digraph(edges(:,1), edges(:, 2), l);
-P = shortestpath(G, 1, 17);
+G_l = digraph(edges(:,1), edges(:, 2), l);
+P = shortestpath(G_l, 1, 17);
 %% b) maxflow
 
-G = digraph(edges(:,1), edges(:, 2), C);
-mf = maxflow(G, 1, 17);
+G_C = digraph(edges(:,1), edges(:, 2), C);
+mf = maxflow(G_C, 1, 17);
 
 %% c) node net flow
 
-b = zeros(17,1);
+b = B*flow;
 
-% subtract outgoing flow
-for i = 1:28
-    u = edges(i,1);
-    v = edges(i,2);
-    
-    b(u) = b(u) - flow(i);   % flow leaves u
-    b(v) = b(v) + flow(i);   % flow enters v
-end
-
-%% d)
-%net_in = b(1);
+%% prep for cvx
 
 M = 28;
 nu = zeros(17, 1);
-nu(1) = -b(1);
-nu(17) = b(1);
+nu(1) = b(1);
+nu(17) = -b(1);
 
 cvx_quiet true
+
+%% d)
 
 cvx_begin
     variable f1(M)
@@ -63,7 +55,7 @@ cvx_end
 
 cvx_begin
     variable f2(M)
-    minimize( sum( -l .* C .* log(1 - f2./C) ) )
+    minimize( sum( l .* C .* (log(C) - log(C - f2))))
     subject to
         B * f2 == nu
         0 <= f2 <= C
@@ -71,27 +63,38 @@ cvx_end
 
 %% f)
 
-w = f1.*l./(C.*(1-f1./C).^2);
+w1 = f1.*l./(C.*(1-f1./C).^2);
 
 cvx_begin
     variable f3(M)
-    minimize( sum( -l .* C .* log(1 - f3./C) + f3.*w) )
+    minimize( sum( l .* C .* (log(C) - log(C - f3)) + f3.*w1) )
     subject to
         B * f3 == nu
         0 <= f3 <= C
 cvx_end
 
-disp(f3);
-
 %%
 
 cvx_begin
     variable f4(M)
-    minimize sum(l.*C.*inv_pos(1-f4./C) - l.*C)
+    minimize sum(l.*quad_over_lin(f4,(C-f4), 0))
     subject to
         B * f4 == nu
         0 <= f4 <= C
 cvx_end
+
+%%
+
+w2 = f4.*l./(C.*(1-f4./C).^2) - l;
+
+cvx_begin
+    variable f5(M)
+    minimize( sum( l .* C .* (log(C) - log(C - f5)) + f5.*w2) )
+    subject to
+        B * f5 == nu
+        0 <= f5 <= C
+cvx_end
+
 
 %% Plot capacity
 

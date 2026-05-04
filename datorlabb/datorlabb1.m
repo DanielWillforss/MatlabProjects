@@ -1,3 +1,4 @@
+close
 clear
 clc
 
@@ -31,14 +32,14 @@ Ex = Coord;
 K = zeros(ndof);
 F = zeros(ndof, 1);
 
-F(ndof) = F(ndof) + 15*A;
+F(ndof) = F(ndof) - 15*A;
 bc = [1 0];
 
 %% Solver
 
 for elnr = 1:nelm
     Ke = spring1e(k*A/Le);
-    Fe = Q*A*Le/2 * [1; 1];
+    Fe = Q*Le/2 * [1; 1];
     [K, F] = assem(Edof(elnr,:), K, Ke, F, Fe);
 end
 

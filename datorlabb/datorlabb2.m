@@ -1,3 +1,4 @@
+close
 clear
 clc
 
