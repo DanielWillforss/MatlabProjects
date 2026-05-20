@@ -69,6 +69,7 @@ for elnr = 1:nelm
     [K, f] = assem(edof(elnr,:), K, Ke, f, fe);
 end
 
+%not solveq?
 a = solve(K, f);
 
 %% Post-processor

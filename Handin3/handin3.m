@@ -16,7 +16,7 @@ cumulative = cumsum(P')';
 % config
 init_node=2;
 end_node= 2;
-N = 1e7;
+N = 1e5;
 simulation_limit = 1000;
 
 % setup
