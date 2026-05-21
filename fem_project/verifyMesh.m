@@ -4,8 +4,17 @@ clc
 
 %% Pre-processor
 
-% Get mesh
-load("mesh.mat");
+%mesh
+p = [0 0.005 0.01 0 0.005 0.01 0 0.005 0.01; 
+     0 0 0 0.005 0.005 0.005 0.01 0.01 0.01];
+e = [7 8 9 6 3 2 1 4;
+     8 9 6 3 2 1 4 7;
+     0 0 0 0 0 0 0 0;
+     0 0 0 0 0 0 0 0;
+     1 2 3 4 5 6 7 8];
+t = [1 2 3 6 9 8 7 4;
+     2 3 6 9 8 7 4 1;
+     5 5 5 5 5 5 5 5];
 
 % Plot of Mesh
 figure
@@ -32,17 +41,18 @@ nen = 3;
 
 % Set material constants
 
-k = 1; %k = 2?
+k = 10; %k = 2?
 D = [k 0; 0 k];
-qout = 2000;
-alphac = 50;
-Tinf = 293;
-ep = 1;
-Q = 4*10^5;
+%qout = 2000;
+alphac = 1000;
+Tinf = 20;
+ep = 0.01;
+Q = 0;
 
 % Set up K, f, and bc
 K = zeros(ndof);
 f = zeros(ndof, 1);
+bc = [];
 
 for enr = 1:length(e)
     boundary = e(5, enr);
@@ -52,10 +62,12 @@ for enr = 1:length(e)
     Ke = zeros(2, 2);
     fe = zeros(2, 1);
 
-    if boundary == 3
-        fe = -qout*Le/2 * ones(2, 1);
+    if ismember(boundary, [3 4])
+        bc = [bc;
+              node1  100;
+              node2  100];
     end
-    if ismember(boundary, [1 5:20])
+    if ismember(boundary, [2])
         Ke = alphac*Le/6*[2 1; 1 2];
         fe = alphac*Tinf*Le/2*ones(2,1);
     end
@@ -65,12 +77,12 @@ end
 %% Solver
 
 for elnr = 1:nelm
-    [Ke, fe] = flw2te(ex(elnr,:), ey(elnr,:), ep, D, Q);
+    [Ke, fe] = flw2te(ex(elnr,:), ey(elnr,:), ep, [k 0; 0 k], Q);
     [K, f] = assem(edof(elnr,:), K, Ke, f, fe);
 end
 
 %not solveq?
-a = solve(K, f);
+a = solve(K, f, bc);
 
 %% Post-processor
 

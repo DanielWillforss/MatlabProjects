@@ -1,11 +1,22 @@
+% Mechanical
 clear
 close all
 clc
 
 %% Pre-processor
 
-% Get mesh
-load("mesh.mat");
+%mesh
+p = [0 0.005 0.01 0 0.005 0.01 0 0.005 0.01; 
+     0 0 0 0.005 0.005 0.005 0.01 0.01 0.01];
+e = [7 8 9 6 3 2 1 4;
+     8 9 6 3 2 1 4 7;
+     0 0 0 0 0 0 0 0;
+     0 0 0 0 0 0 0 0;
+     1 2 3 4 5 6 7 8];
+t = [1 2 3 6 9 8 7 4;
+     2 3 6 9 8 7 4 1;
+     5 5 5 5 5 5 5 5];
+
 
 % Plot of Mesh
 figure
@@ -41,8 +52,8 @@ nen = 3; %triangle
 
 
 
-thickness = 1;
-E = 30*1e+09;
+thickness = 0.01;
+E = 200*1e+09;
 v = 0.3;
 
 D = hooke(2, E, v);
@@ -72,23 +83,18 @@ for enr = 1:length(e)
     %fe = thickness*Le/2 * [-pnx -pny -pnx -pny]
     pn = 0; %securded edge
 
-    if boundary == 2
-        p0 = 1e8;
-        ymid = (coord(node1,2) + coord(node2,2))/2;
-        pn = p0*(ymid/0.023 - 1); %p2
+    if ismember(boundary, [2])
+        pn = 150*1e6;
     end
-    if boundary == 3
-        pn = -1e7;     %p2
+    if ismember(boundary, [3 4])
+        pn = 100*1e6; 
     end
-    if boundary == 4
+    if ismember(boundary, [7 8])
         bc = [bc;
               2*node1-1  0;
               2*node1    0;
               2*node2-1  0;
               2*node2    0];
-    end
-    if ismember(boundary, [5:20])
-        pn = -1e6; %pc
     end
 
     fe = thickness*Le/2*pn * [normal(1); normal(2); normal(1); normal(2)]; 
@@ -105,20 +111,21 @@ for enr = 1:length(e)
     %plot
     midpoint = [coord(node1, 1) + dx*0.5 coord(node1, 2) + dy*0.5];
     %quiver(midpoint(1), midpoint(2), normal(1), normal(2), 0.001, 'MaxHeadSize', 2);
-    quiver(midpoint(1), midpoint(2), fe(1), fe(2), 0.0000005);
+    quiver(midpoint(1), midpoint(2), fe(1), fe(2), 1);
 end
 
 
 hold off
 
 %% Thermal
-load("element_temp.mat");
+%load("element_temp.mat");
 
-T = sum(ed, 2)/3;
-T0 = 293;
-alpha = 8e-6;
+%T = sum(ed, 2)/3;
+%T0 = 293;
+%alpha = 8e-6;
 
-eps_th = alpha.*(T - T0)*[1 1 1 0];
+eps_th = 0;
+%eps_th = alpha.*(T - T0)*[1 1 1 0];
 
 
 
@@ -126,9 +133,9 @@ eps_th = alpha.*(T - T0)*[1 1 1 0];
 
 for elnr = 1:nelm
     Ke = plante(ex(elnr,:), ey(elnr,:), [2 thickness], D);
-    ef = plantf(ex(elnr,:), ey(elnr,:), [2 thickness], (D*eps_th(elnr,:)')');
-    [K, f] = assem(edof(elnr,:), K, Ke, f, ef);
-    %K = assem(edof(elnr,:), K, Ke);
+    %ef = plantf(ex(elnr,:), ey(elnr,:), [2 thickness], (D*eps_th(elnr,:)')');
+    %[K, f] = assem(edof(elnr,:), K, Ke, f, ef);
+    K = assem(edof(elnr,:), K, Ke);
 
    % [Ke, fe] = flw2te(ex(elnr,:), ey(elnr,:), ep, [k 0; 0 k], Q);
     %[K, f] = assem(edof(elnr,:), K, Ke, f, fe);
