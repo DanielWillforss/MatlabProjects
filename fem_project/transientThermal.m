@@ -60,8 +60,8 @@ M = zeros(ndof);
 for elnr = 1:nelm
     Ke = flw2te(ex(elnr,:), ey(elnr,:), ep, [k 0; 0 k]); 
     K = assem(edof(elnr,:), K, Ke);
-    Me = plantml(ex(elnr,:), ey(elnr,:), p*cp);
-    M = assem(edof(elnr, :), M, Me);
+    Ce = plantml(ex(elnr,:), ey(elnr,:), p*cp);
+    C = assem(edof(elnr, :), C, Ce);
 end
 
 for enr = 1:length(e)
@@ -108,7 +108,7 @@ end
 
 ip = [t(1) t_tot 1 [nsteps 0 t]]; %timestep parameters
 
-Tsnap=step1(K,M,d0,ip,f,[]); %pbound?
+Tsnap=step1(K,C,d0,ip,f,[]); %pbound?
 %%a = solve(K, f);
 
 %% Post-processor
